@@ -645,7 +645,7 @@ namespace CodeWalker.Project.Panels
                             break;//split line would not be convex at i1
                         }
                         var angl2 = getAngle(poly, i2, i1);
-                        var angldiff2 = getAngleDiff(angl2, prevangl);
+                        var angldiff2 = getAngleDiff(prevangl, angl2);
                         if (angldiff2 < 0)
                         {
                             break;//this step forward is not convex..
@@ -1859,13 +1859,12 @@ UpdateStatus("Building polygon edges...");
             {
                 //find the next vertex along the slope in the given direction
 
-                int dist = 0;
                 int ti = i;
                 int qi = i;
 
                 bool cgx = CanPolyIncludeNext(ref vpl, plt, i, dirnx, out ti);
-                bool cgy = CanPolyIncludeNext(ref vpl, plt, i, dirny, out ti);
-                bool cgyp = CanPolyIncludeNext(ref vpl, plt, i, dirpy, out ti);
+
+
 
 
                 dx = 0;
@@ -1926,7 +1925,7 @@ UpdateStatus("Building polygon edges...");
             {
                 //d: 0=prevX, 1=prevY, 2=nextX, 3=nextY
 
-                //find how many cells are between given vertex and the edge of a poly,
+                //find how many cells are between given vertex(id) and the edge of a poly,
                 //in the specified direction
 
                 int dist = 0;
@@ -1994,9 +1993,6 @@ UpdateStatus("Building polygon edges...");
                 float slope = maxslope;
 
                 bool cgx = CanPolyIncludeNext(ref vpl, plt, i, dirnx, out ti);
-                bool cgy = CanPolyIncludeNext(ref vpl, plt, i, dirny, out ti);
-                bool cgyp = CanPolyIncludeNext(ref vpl, plt, i, dirpy, out ti);
-
 
                 if (cgx && (slope >= 0)) //new slope should be >=0
                 {
