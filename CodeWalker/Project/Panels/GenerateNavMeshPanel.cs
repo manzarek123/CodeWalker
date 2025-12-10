@@ -781,9 +781,11 @@ namespace CodeWalker.Project.Panels
                         ypoly.B01_AvoidUnk = true;
                     }
 
-                    ypoly.B02_IsFootpath = (poly.Material.Index == 1);
+                    ypoly.B02_IsFootpath = poly.isWalkable();
                     ypoly.B06_SteepSlope = poly.IsTooSteep();
-                    ypoly.B18_IsRoad = (poly.Material.Index == 4);//4,5,6
+                    ypoly.B07_IsWater = (poly.Material.Index == 125);
+                    ypoly.B18_IsRoad = (poly.Material.Index == 4);
+                    ypoly.B17_IsFlatGround = !ypoly.B06_SteepSlope && !ypoly.B07_IsWater && !ypoly.B18_IsRoad;
                     ypoly.B22_FootpathUnk1 = (poly.PedDensity == 1);
                     ypoly.B23_FootpathUnk2 = (poly.PedDensity == 2);
                     ypoly.B24_FootpathMall = (poly.PedDensity == 3);
@@ -1089,8 +1091,19 @@ namespace CodeWalker.Project.Panels
                 return Math.Abs(area) / 2.0f;
             }
 
+            public bool isWalkable()
+            {
+                return !IsTooSteep(60.0f) && ((PolyFlags & (ushort)EBoundMaterialFlags.FLAG_WALKABLE_PATH) != 0);
+            }
+
             public bool IsTooSteep(float maxAngleDegrees = 44.0f)
             {
+                // If this polygon is marked as stairs, allow it regardless of steepness
+                if ((PolyFlags & (ushort)EBoundMaterialFlags.FLAG_STAIRS) != 0) return false;
+
+                // If this polygon is explicitly marked as too steep, respect that
+                if ((PolyFlags & (ushort)EBoundMaterialFlags.FLAG_TOO_STEEP_FOR_PLAYER) != 0) return true;
+
                 float angleRads = maxAngleDegrees * (float)(Math.PI / 180.0);
                 float dotUp = Normal.Z; // Dot product with up vector (0,0,1)
                 return dotUp < 0.0f || dotUp < (float)Math.Cos(angleRads);
@@ -1902,9 +1915,6 @@ namespace CodeWalker.Project.Panels
     int qi = i;
 
    bool cgx = CanPolyIncludeNext(ref vpl, plt, i, dirnx, out ti);
-
-
-
 
          dx = 0;
                 dy = 0;
