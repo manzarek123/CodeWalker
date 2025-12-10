@@ -780,6 +780,7 @@ namespace CodeWalker.Project.Panels
                     }
 
                     ypoly.B02_IsFootpath = (poly.Material.Index == 1);
+                    ypoly.B06_SteepSlope = poly.IsTooSteep();
                     ypoly.B18_IsRoad = (poly.Material.Index == 4);//4,5,6
 
                     // Register all edges in the dictionary for neighbor lookup
@@ -1077,6 +1078,13 @@ namespace CodeWalker.Project.Panels
                 }
 
                 return Math.Abs(area) / 2.0f;
+            }
+
+            public bool IsTooSteep(float maxAngleDegrees = 44.0f)
+            {
+                float angleRads = maxAngleDegrees * (float)(Math.PI / 180.0);
+                float dotUp = Normal.Z; // Dot product with up vector (0,0,1)
+                return dotUp < 0.0f || dotUp < (float)Math.Cos(angleRads);
             }
         }
 
