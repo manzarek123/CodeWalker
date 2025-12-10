@@ -232,8 +232,6 @@ namespace CodeWalker.Project.Panels
 
 
 
-
-
                 //try merge generated polys into bigger ones, while keeping convex!
                 UpdateStatus("Building edge dictionary...");
                 var edgeDict = new Dictionary<GenEdgeKey, GenEdge>();
@@ -671,7 +669,6 @@ namespace CodeWalker.Project.Panels
 
 
 
-
                     return -1;
                 });
                 foreach (var poly in polys)
@@ -745,8 +742,6 @@ namespace CodeWalker.Project.Panels
 
 
 
-
-
                     poly.Index = mergedPolys.Count;
                     mergedPolys.Add(poly);
                 }
@@ -756,9 +751,6 @@ namespace CodeWalker.Project.Panels
                 buildEdgeDict();
 
                 newCount = polys.Count;
-
-
-
 
 
                 UpdateStatus("Building YNVs...");
@@ -775,6 +767,17 @@ namespace CodeWalker.Project.Panels
                         { continue; }
 
                     polyMap[poly] = ypoly;
+
+                    // Calculate polygon area to set avoid flags
+                    float polyArea = poly.CalculateArea();
+                    if (polyArea < 2.0f)
+                    {
+                        ypoly.B00_AvoidUnk = true;
+                    }
+                    else if (polyArea > 20.0f)
+                    {
+                        ypoly.B01_AvoidUnk = true;
+                    }
 
                     ypoly.B02_IsFootpath = (poly.Material.Index == 1);
                     ypoly.B18_IsRoad = (poly.Material.Index == 4);//4,5,6
@@ -1056,6 +1059,24 @@ namespace CodeWalker.Project.Panels
                 }
                 else
                 { }//probably shouldn't happen
+            }
+
+            public float CalculateArea()
+            {
+                if (Vertices == null || Vertices.Length < 3)
+                    return 0f;
+
+                float area = 0f;
+                int n = Vertices.Length;
+
+                for (int i = 0; i < n; i++)
+                {
+                    int j = (i + 1) % n;
+                    area += Vertices[i].X * Vertices[j].Y;
+                    area -= Vertices[j].X * Vertices[i].Y;
+                }
+
+                return Math.Abs(area) / 2.0f;
             }
         }
 
@@ -1857,28 +1878,28 @@ namespace CodeWalker.Project.Panels
 
             private int FindNextID(ref Plane vpl, float plt, int i, int dirnx, int dirny, int dirpy, float slope, out int dx, out int dy)
             {
-                //find the next vertex along the slope in the given direction
+        //find the next vertex along the slope in the given direction
 
-                int ti = i;
-                int qi = i;
+   int ti = i;
+    int qi = i;
 
-                bool cgx = CanPolyIncludeNext(ref vpl, plt, i, dirnx, out ti);
-
-
+   bool cgx = CanPolyIncludeNext(ref vpl, plt, i, dirnx, out ti);
 
 
-                dx = 0;
+
+
+         dx = 0;
                 dy = 0;
                 return i;
-            }
+      }
 
 
-            private int MaxOffsetFromSlope(float s)
-            {
-                if (s >= 1) return (int)s;
-                if (s > 0) return 1;
-                if (s > -1) return 0;
-                return -1;
+        private int MaxOffsetFromSlope(float s)
+        {
+            if (s >= 1) return (int)s;
+            if (s > 0) return 1;
+            if (s > -1) return 0;
+            return -1;
 
                 //return ((s>=1)||(s<=-1))?(int)s : (s>0)?1 : (s<0)?-1 : 0;
             }
@@ -1923,7 +1944,7 @@ namespace CodeWalker.Project.Panels
 
             private int FindPolyEdgeDist(ref Plane vplane, float plthresh, int i, int dir)
             {
-                //d: 0=prevX, 1=prevY, 2=nextX, 3=nextY
+                //d: 0=prevX, 1=prevY,  2=nextX, 3=nextY
 
                 //find how many cells are between given vertex(id) and the edge of a poly,
                 //in the specified direction
@@ -1943,25 +1964,25 @@ namespace CodeWalker.Project.Panels
             }
             private int FindPolyEdgeID(ref Plane vplane, float plthresh, int i, int dir)
             {
-                //d: 0=prevX, 1=prevY, 2=nextX, 3=nextY
+     //d: 0=prevX, 1=prevY, 2=nextX, 3=nextY
 
-                //find the last id of a vertex contained in this poly, starting from i,
-                //in the specified direction
+       //find the last id of a vertex contained in this poly, starting from i,
+        //in the specified direction
 
-                int dist = 0;
-                int ci = i;
+  int dist = 0;
+    int ci = i;
 
-                while (dist < 100)
-                {
-                    int ni;
-                    if (!CanPolyIncludeNext(ref vplane, plthresh, ci, dir, out ni)) break;
-                    ci = ni;
-                    dist++;
-                }
+         while (dist < 100)
+         {
+     int ni;
+ if (!CanPolyIncludeNext(ref vplane, plthresh, ci, dir, out ni)) break;
+          ci = ni;
+       dist++;
+ }
 
-                return ci;
+          return ci;
             }
-            private int FindPolyEdgeID(ref Plane vplane, float plthresh, int i, int dir, out int dist)
+     private int FindPolyEdgeID(ref Plane vplane, float plthresh, int i, int dir, out int dist)
             {
                 //d: 0=prevX, 1=prevY, 2=nextX, 3=nextY
 
@@ -2228,7 +2249,6 @@ namespace CodeWalker.Project.Panels
             }
             catch { }
         }
-
 
     }
 }
