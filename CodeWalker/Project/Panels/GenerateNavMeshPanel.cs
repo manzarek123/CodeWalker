@@ -112,8 +112,8 @@ namespace CodeWalker.Project.Panels
                 var polys = new List<GenPoly>();
 
                 var vertexCountXY = (max - min) / density;
-                int vertexCountX = (int)vertexCountXY.X+1;
-                int vertexCountY = (int)vertexCountXY.Y+1;
+                int vertexCountX = (int)vertexCountXY.X + 1;
+                int vertexCountY = (int)vertexCountXY.Y + 1;
                 //int vertexCountTot = vertexCountX * vertexCountY;
                 vgrid.BeginGrid(vertexCountX, vertexCountY);
 
@@ -172,7 +172,7 @@ namespace CodeWalker.Project.Panels
                         ray.Position.Z = bmax.Z + 1.0f;//start the ray at the top of the cell
                         var intres = space.RayIntersect(ray, float.MaxValue, layers);
                         hitTestCount++;
-                        while (intres.Hit)// && (intres.HitDist > 0))
+                        while (intres.Hit && (intres.HitDist > 0))
                         {
                             if (intres.HitDist > 0)
                             {
@@ -237,7 +237,7 @@ namespace CodeWalker.Project.Panels
                 //try merge generated polys into bigger ones, while keeping convex!
                 UpdateStatus("Building edge dictionary...");
                 var edgeDict = new Dictionary<GenEdgeKey, GenEdge>();
-                var tryGetEdge = new Func<Vector3, Vector3, GenEdge>((v1, v2) => 
+                var tryGetEdge = new Func<Vector3, Vector3, GenEdge>((v1, v2) =>
                 {
                     var key1 = new GenEdgeKey(v1, v2);
                     var key2 = new GenEdgeKey(v2, v1);
@@ -430,7 +430,7 @@ namespace CodeWalker.Project.Panels
                 }
                 polys = mergedPolys;
 
-                
+
                 UpdateStatus("Merging edges...");
                 edgeDict = new Dictionary<GenEdgeKey, GenEdge>();
                 buildEdgeDict();
@@ -474,13 +474,13 @@ namespace CodeWalker.Project.Panels
                         poly.RemoveVertex(verti);
                         poly0?.RemoveVertex(verti);//if poly0==poly, remove same vertex twice?
 
-                        
+
                         //remove merged edges from edge dict, and add new edge to it
                         tryRemoveEdge(vert0, verti);
                         tryRemoveEdge(verti, vert1);
 
                         var key = new GenEdgeKey(vert0, vert1);
-                        var edge = new GenEdge(poly, i-1);
+                        var edge = new GenEdge(poly, i - 1);
                         edge.Poly2 = poly0;
                         edge.EdgeIndex2 = poly0?.FindVertex(vert0) ?? -1; //(edge0.Poly2 != poly0) ? edge0.EdgeIndex1 : edge0.EdgeIndex2;
                         edgeDict[key] = edge;
@@ -491,29 +491,29 @@ namespace CodeWalker.Project.Panels
                 }
 
 
-                
+
                 UpdateStatus("Convexifying polygons...");
                 mergedPolys = new List<GenPoly>();
-                var getAngle = new Func<GenPoly, int, int, float>((poly, i1, i2) => 
+                var getAngle = new Func<GenPoly, int, int, float>((poly, i1, i2) =>
                 {
                     var edge0 = poly.Vertices[i2] - poly.Vertices[i1];
                     return (float)Math.Atan2(edge0.Y, edge0.X);
                 });
-                var getAngleDiff = new Func<float, float, float>((a1, a2) => 
+                var getAngleDiff = new Func<float, float, float>((a1, a2) =>
                 {
                     var angldiff = a2 - a1;
                     if (angldiff > Math.PI) angldiff -= (float)(Math.PI * 2);
                     if (angldiff < -Math.PI) angldiff += (float)(Math.PI * 2);
                     return angldiff;
                 });
-                var findInflection = new Func<GenPoly, int, int>((poly, starti) => 
+                var findInflection = new Func<GenPoly, int, int>((poly, starti) =>
                 {
                     var vcnt = poly.Vertices.Length;
                     var i0 = starti % vcnt;
                     var i1 = (i0 + 1) % vcnt;
                     var angl0 = getAngle(poly, i0, i1);
                     var curangl = angl0;
-                    for (int i = starti+1; i <= vcnt; i++)
+                    for (int i = starti + 1; i <= vcnt; i++)
                     {
                         i0 = i % vcnt;
                         i1 = (i0 + 1) % vcnt;
@@ -527,7 +527,7 @@ namespace CodeWalker.Project.Panels
                     }
                     return -1;
                 });
-                var findIntersection = new Func<GenPoly, int, int, int>((poly, i0, i1) => 
+                var findIntersection = new Func<GenPoly, int, int, int>((poly, i0, i1) =>
                 {
                     var vcnt = poly.Vertices.Length;
                     var v0 = poly.Vertices[i0];
@@ -574,7 +574,7 @@ namespace CodeWalker.Project.Panels
                     }
                     return -1;
                 });
-                var findConvexSplit = new Func<GenPoly, int, int>((poly, starti) => 
+                var findConvexSplit = new Func<GenPoly, int, int>((poly, starti) =>
                 {
                     var vcnt = poly.Vertices.Length;
 
@@ -706,7 +706,7 @@ namespace CodeWalker.Project.Panels
 
                             //remove the clipped vertices from the current poly
                             newverts.Clear();
-                            if (convi < endi) convi += vcnt; 
+                            if (convi < endi) convi += vcnt;
                             for (int i = endi; i <= convi; i++)
                             {
                                 var i0 = i % vcnt;
@@ -1118,7 +1118,7 @@ namespace CodeWalker.Project.Panels
                             if ((Vertices[i].PrevIDX < 0) && (Vertices[i].PrevIDY < 0) && (Vertices[i].NextIDX < 0) && (Vertices[i].NextIDY < 0)) continue; //(not connected to anything)
 
                             //if (!(Vertices[i].CompPrevX || Vertices[i].CompPrevY || Vertices[i].CompNextX || Vertices[i].CompNextY)) //continue; //all joins are different - discard this vertex
-                            
+
 
 
 
@@ -1191,30 +1191,30 @@ namespace CodeWalker.Project.Panels
 
 
                             {
-                            //if (dnx > 0) //can move along +X
-                            //{
-                            //    AssignVertices(ref vplane, plthresh, i, dnx, dny, dpy, 2, poly);
-                            //}
-                            //else if (dny > 0) //can move along +Y
-                            //{
-                            //    AssignVertices(ref vplane, plthresh, i, dny, dpx, dnx, 3, poly);
-                            //}
-                            //else if (dpx > 0) //can move along -X
-                            //{
-                            //    AssignVertices(ref vplane, plthresh, i, dpx, dpy, dny, 0, poly);
-                            //}
-                            //else if (dpy > 0) //can move along -Y
-                            //{
-                            //    AssignVertices(ref vplane, plthresh, i, dpy, dnx, dpx, 1, poly);
-                            //}
-                            //else //single vertex poly... connected to something else
-                            //{
-                            //    addpolys = false;
-                            //}
-                            //if (addpolys)
-                            //{
-                            //    polys.Add(poly);
-                            //}
+                                //if (dnx > 0) //can move along +X
+                                //{
+                                //    AssignVertices(ref vplane, plthresh, i, dnx, dny, dpy, 2, poly);
+                                //}
+                                //else if (dny > 0) //can move along +Y
+                                //{
+                                //    AssignVertices(ref vplane, plthresh, i, dny, dpx, dnx, 3, poly);
+                                //}
+                                //else if (dpx > 0) //can move along -X
+                                //{
+                                //    AssignVertices(ref vplane, plthresh, i, dpx, dpy, dny, 0, poly);
+                                //}
+                                //else if (dpy > 0) //can move along -Y
+                                //{
+                                //    AssignVertices(ref vplane, plthresh, i, dpy, dnx, dpx, 1, poly);
+                                //}
+                                //else //single vertex poly... connected to something else
+                                //{
+                                //    addpolys = false;
+                                //}
+                                //if (addpolys)
+                                //{
+                                //    polys.Add(poly);
+                                //}
                             }
 
 
@@ -1342,7 +1342,7 @@ namespace CodeWalker.Project.Panels
                 }
 
                 var totverts = vertexCountN + vertexCountP;
-                var fracused = (float)(lastqx+1) / dnx;
+                var fracused = (float)(lastqx + 1) / dnx;
 
                 CornersB.Add(lastqi);
                 int cc = CornersB.Count + CornersT.Count - 1;
@@ -1745,7 +1745,7 @@ namespace CodeWalker.Project.Panels
                                 default://shouldn't happen?
                                     break;
                             }
-                        
+
 
 
                         }
@@ -1969,7 +1969,7 @@ namespace CodeWalker.Project.Panels
                         //step -Y until can't go further, or can step +X
                         int dy = 1;
                         int yi = ti;
-                        while(CanPolyIncludeNext(ref vpl, plt, yi, dirpy, out ti))
+                        while (CanPolyIncludeNext(ref vpl, plt, yi, dirpy, out ti))
                         {
                             yi = ti;
                             dy++;

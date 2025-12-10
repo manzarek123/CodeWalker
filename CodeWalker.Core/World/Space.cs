@@ -530,8 +530,8 @@ namespace CodeWalker.World
 
 
             //build the links arrays.
-            if(tlinks==null) tlinks = new List<YndLink>();
-            if(nlinks==null) nlinks = new List<YndLink>();
+            if (tlinks == null) tlinks = new List<YndLink>();
+            if (nlinks == null) nlinks = new List<YndLink>();
             tlinks.Clear();
             for (int i = 0; i < nodecount; i++)
             {
@@ -572,14 +572,14 @@ namespace CodeWalker.World
         }
         public void BuildYndVerts(YndFile ynd, YndNode[] selectedNodes, List<EditorVertex> tverts = null)
         {
-            var laneColour = (uint) new Color4(0f, 0f, 1f, 1f).ToRgba();
+            var laneColour = (uint)new Color4(0f, 0f, 1f, 1f).ToRgba();
             var ynodes = ynd.Nodes;
             if (ynodes == null) return;
 
             int nodecount = ynodes.Length;
 
             //build the main linked vertex array (used by the renderable to draw the lines).
-            if(tverts==null) tverts = new List<EditorVertex>();
+            if (tverts == null) tverts = new List<EditorVertex>();
             tverts.Clear();
             for (int i = 0; i < nodecount; i++)
             {
@@ -619,7 +619,7 @@ namespace CodeWalker.World
                     for (int j = iOffset; j < yl.LaneCountForward + iOffset; j++)
                     {
                         var vertOffset = laneDirCross * (offset + laneWidth * j);
-                        
+
                         vertOffset.Z = 0.1f;
                         var lvert1 = new EditorVertex
                         {
@@ -640,7 +640,7 @@ namespace CodeWalker.World
                         var apos = lvert1.Position + laneDir * yl.LinkLength / 2;
                         const float asize = 0.5f;
                         const float negasize = asize * -1f;
-                        tverts.Add(new EditorVertex(){ Position = apos, Colour = laneColour});
+                        tverts.Add(new EditorVertex() { Position = apos, Colour = laneColour });
                         tverts.Add(new EditorVertex() { Position = apos + laneDir * negasize + laneDirCross * asize, Colour = laneColour });
                         tverts.Add(new EditorVertex() { Position = apos, Colour = laneColour });
                         tverts.Add(new EditorVertex() { Position = apos + laneDir * negasize + laneDirCross * negasize, Colour = laneColour });
@@ -1036,7 +1036,7 @@ namespace CodeWalker.World
                     var rayhit = RayIntersect(rayt, rayl);
                     if (rayhit.Hit) //looks like it is tunnelling... need to find the sphere hit point
                     {
-                        sph.Center = rayhit.Position - (r.HitVelDir*Math.Min(e.Radius*0.5f, rayhit.HitDist));
+                        sph.Center = rayhit.Position - (r.HitVelDir * Math.Min(e.Radius * 0.5f, rayhit.HitDist));
                         float hitd = rayhit.HitDist;
                         r.HitT = hitd / absdisp;
                         if (r.HitT > 1.0f)
@@ -1049,7 +1049,7 @@ namespace CodeWalker.World
                     }
                 }
             }
-            
+
             if (r.SphereHit.Hit)
             {
                 int maxiter = 6;//(would be better to iterate until error within tolerance..)
@@ -1213,10 +1213,10 @@ namespace CodeWalker.World
 
 
             var pos = NavGrid.GetCellPos(cam.Position);
-            int minx = Math.Min(Math.Max(pos.X - gridrange, 0), NavGrid.CellCountX-1);
-            int maxx = Math.Min(Math.Max(pos.X + gridrange, 0), NavGrid.CellCountX-1);
-            int miny = Math.Min(Math.Max(pos.Y - gridrange, 0), NavGrid.CellCountY-1);
-            int maxy = Math.Min(Math.Max(pos.Y + gridrange, 0), NavGrid.CellCountY-1);
+            int minx = Math.Min(Math.Max(pos.X - gridrange, 0), NavGrid.CellCountX - 1);
+            int maxx = Math.Min(Math.Max(pos.X + gridrange, 0), NavGrid.CellCountX - 1);
+            int miny = Math.Min(Math.Max(pos.Y - gridrange, 0), NavGrid.CellCountY - 1);
+            int maxy = Math.Min(Math.Max(pos.Y + gridrange, 0), NavGrid.CellCountY - 1);
             for (int x = minx; x <= maxx; x++)
             {
                 for (int y = miny; y <= maxy; y++)
@@ -1754,8 +1754,6 @@ namespace CodeWalker.World
         public SpaceMapDataStoreNode RootNode;
         public int SplitThreshold = 10;
 
-        public List<MapDataStoreNode> VisibleItems = new List<MapDataStoreNode>();
-
         public void Init(List<MapDataStoreNode> rootnodes)
         {
             RootNode = new SpaceMapDataStoreNode();
@@ -1769,36 +1767,36 @@ namespace CodeWalker.World
 
         public List<MapDataStoreNode> GetItems(ref Vector3 p) //get items at a point, using the streaming extents
         {
-            VisibleItems.Clear();
+            var mapDataList = new List<MapDataStoreNode>();
 
             if (RootNode != null)
             {
-                RootNode.GetItems(ref p, VisibleItems);
+                RootNode.GetItems(ref p, mapDataList);
             }
 
-            return VisibleItems;
+            return mapDataList;
         }
         public List<MapDataStoreNode> GetItems(ref Vector3 min, ref Vector3 max) //get items intersecting a box, using the entities extents
         {
-            VisibleItems.Clear();
+            var mapDataList = new List<MapDataStoreNode>();
 
             if (RootNode != null)
             {
-                RootNode.GetItems(ref min, ref max, VisibleItems);
+                RootNode.GetItems(ref min, ref max, mapDataList);
             }
 
-            return VisibleItems;
+            return mapDataList;
         }
         public List<MapDataStoreNode> GetItems(ref Ray ray) //get items intersecting a ray, using the entities extents
         {
-            VisibleItems.Clear();
+            var mapDataList = new List<MapDataStoreNode>();
 
             if (RootNode != null)
             {
-                RootNode.GetItems(ref ray, VisibleItems);
+                RootNode.GetItems(ref ray, mapDataList);
             }
 
-            return VisibleItems;
+            return mapDataList;
         }
     }
     public class SpaceMapDataStoreNode
@@ -1973,8 +1971,6 @@ namespace CodeWalker.World
         public SpaceBoundsStoreNode RootNode;
         public int SplitThreshold = 10;
 
-        public List<BoundsStoreItem> VisibleItems = new List<BoundsStoreItem>();
-
         public void Init(List<BoundsStoreItem> items)
         {
             RootNode = new SpaceBoundsStoreNode();
@@ -1988,25 +1984,25 @@ namespace CodeWalker.World
 
         public List<BoundsStoreItem> GetItems(ref Vector3 min, ref Vector3 max, bool[] layers = null)
         {
-            VisibleItems.Clear();
+            var boundslist = new List<BoundsStoreItem>();
 
             if (RootNode != null)
             {
-                RootNode.GetItems(ref min, ref max, VisibleItems, layers);
+                RootNode.GetItems(ref min, ref max, boundslist, layers);
             }
 
-            return VisibleItems;
+            return boundslist;
         }
         public List<BoundsStoreItem> GetItems(ref Ray ray, bool[] layers = null)
         {
-            VisibleItems.Clear();
+            var boundslist = new List<BoundsStoreItem>();
 
             if (RootNode != null)
             {
-                RootNode.GetItems(ref ray, VisibleItems, layers);
+                RootNode.GetItems(ref ray, boundslist, layers);
             }
 
-            return VisibleItems;
+            return boundslist;
         }
     }
     public class SpaceBoundsStoreNode
@@ -2295,8 +2291,8 @@ namespace CodeWalker.World
             Vector3 ind = (p - new Vector3(CornerX, CornerY, 0)) * CellSizeInv;
             int x = (int)ind.X;
             int y = (int)ind.Y;
-            x = (x < 0) ? 0 : (x >= CellCountX) ? CellCountX-1 : x;
-            y = (y < 0) ? 0 : (y >= CellCountY) ? CellCountY-1 : y;
+            x = (x < 0) ? 0 : (x >= CellCountX) ? CellCountX - 1 : x;
+            y = (y < 0) ? 0 : (y >= CellCountY) ? CellCountY - 1 : y;
             return new Vector2I(x, y);
         }
         public SpaceNavGridCell GetCell(Vector2I g)
