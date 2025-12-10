@@ -645,7 +645,7 @@ namespace CodeWalker.Project.Panels
                             break;//split line would not be convex at i1
                         }
                         var angl2 = getAngle(poly, i2, i1);
-                        var angldiff2 = getAngleDiff(prevangl, angl2);
+                        var angldiff2 = getAngleDiff(angl2, prevangl);
                         if (angldiff2 < 0)
                         {
                             break;//this step forward is not convex..
@@ -762,26 +762,112 @@ namespace CodeWalker.Project.Panels
 
 
                 UpdateStatus("Building YNVs...");
-                foreach (var poly in polys)
+                // Build a mapping from GenPoly to YnvPoly and create edge dictionary
+   var polyMap = new Dictionary<GenPoly, YnvPoly>();
+           var edgeVertDict = new Dictionary<GenEdgeKey, List<(YnvPoly poly, int edgeIndex)>>();
+        
+            foreach (var poly in polys)
+           {
+         if (poly.Vertices == null) continue;
+
+        var ypoly = builder.AddPoly(poly.Vertices);
+           if (ypoly == null)
+       { continue; }
+
+       polyMap[poly] = ypoly;
+
+     ypoly.B02_IsFootpath = (poly.Material.Index == 1);
+          ypoly.B18_IsRoad = (poly.Material.Index == 4);//4,5,6
+
+// Register all edges in the dictionary for neighbor lookup
+     for (int i = 0; i < poly.Vertices.Length; i++)
+   {
+     var ip = (i + 1) % poly.Vertices.Length;
+    var v1 = poly.Vertices[i];
+       var v2 = poly.Vertices[ip];
+      var key = new GenEdgeKey(v1, v2);
+     var keyRev = new GenEdgeKey(v2, v1);
+          
+       // Try both orderings of the edge key
+      if (!edgeVertDict.TryGetValue(key, out var edgeList))
+         {
+if (!edgeVertDict.TryGetValue(keyRev, out edgeList))
                 {
-                    if (poly.Vertices == null) continue;
+               edgeList = new List<(YnvPoly poly, int edgeIndex)>();
+            edgeVertDict[key] = edgeList;
+         }
+              }
+       edgeList.Add((ypoly, i));
+           }
+     }
 
-                    var ypoly = builder.AddPoly(poly.Vertices);
-                    if (ypoly == null)
-                    { continue; }
+     // Now create edges for each polygon
+UpdateStatus("Building polygon edges...");
+         foreach (var poly in polys)
+         {
+           if (poly.Vertices == null) continue;
+       if (!polyMap.TryGetValue(poly, out var ypoly)) continue;
 
-
-                    //TODO: add poly edges!
-
-                    ypoly.B02_IsFootpath = (poly.Material.Index == 1);
-
-                    ypoly.B18_IsRoad = (poly.Material.Index == 4);//4,5,6
-
-
-                }
-
-
-
+  var edges = new YnvEdge[poly.Vertices.Length];
+ 
+           for (int i = 0; i < poly.Vertices.Length; i++)
+        {
+       var ip = (i + 1) % poly.Vertices.Length;
+   var v1 = poly.Vertices[i];
+  var v2 = poly.Vertices[ip];
+       var key = new GenEdgeKey(v1, v2);
+      var keyRev = new GenEdgeKey(v2, v1);
+            
+       var edge = new YnvEdge();
+   
+  // Find the neighboring polygon for this edge
+              List<(YnvPoly poly, int edgeIndex)> edgeList = null;
+             if (!edgeVertDict.TryGetValue(key, out edgeList))
+       {
+   edgeVertDict.TryGetValue(keyRev, out edgeList);
+   }
+             
+  YnvPoly neighborPoly = null;
+      if (edgeList != null)
+   {
+       foreach (var entry in edgeList)
+       {
+   if (entry.poly != ypoly)
+          {
+          neighborPoly = entry.poly;
+             break;
+         }
+      }
+}
+         
+       if (neighborPoly != null)
+             {
+    // Shared edge - both Poly1 and Poly2 reference the neighbor
+         edge.Poly1 = neighborPoly;
+              edge.Poly2 = neighborPoly;
+      edge.AreaID1 = neighborPoly.AreaID;
+              edge.AreaID2 = neighborPoly.AreaID;
+   edge.PolyID1 = (uint)neighborPoly.Index;
+          edge.PolyID2 = (uint)neighborPoly.Index;
+     }
+      else
+            {
+           // Border edge - no neighbor, use 0x3FFF
+       edge.Poly1 = null;
+           edge.Poly2 = null;
+       edge.AreaID1 = 0x3FFF;
+       edge.AreaID2 = 0x3FFF;
+  edge.PolyID1 = 0x3FFF;
+       edge.PolyID2 = 0x3FFF;
+     edge.Poly1Unk2 = 1; // Mark as border edge
+       edge.Poly2Unk2 = 1;
+   }
+     
+        edges[i] = edge;
+}
+    
+          ypoly.Edges = edges;
+      }
 
                 var ynvs = builder.Build(false);//todo:vehicles!
 
@@ -1773,12 +1859,13 @@ namespace CodeWalker.Project.Panels
             {
                 //find the next vertex along the slope in the given direction
 
+                int dist = 0;
                 int ti = i;
                 int qi = i;
 
                 bool cgx = CanPolyIncludeNext(ref vpl, plt, i, dirnx, out ti);
-
-
+                bool cgy = CanPolyIncludeNext(ref vpl, plt, i, dirny, out ti);
+                bool cgyp = CanPolyIncludeNext(ref vpl, plt, i, dirpy, out ti);
 
 
                 dx = 0;
@@ -1839,7 +1926,7 @@ namespace CodeWalker.Project.Panels
             {
                 //d: 0=prevX, 1=prevY, 2=nextX, 3=nextY
 
-                //find how many cells are between given vertex(id) and the edge of a poly,
+                //find how many cells are between given vertex and the edge of a poly,
                 //in the specified direction
 
                 int dist = 0;
@@ -1907,6 +1994,9 @@ namespace CodeWalker.Project.Panels
                 float slope = maxslope;
 
                 bool cgx = CanPolyIncludeNext(ref vpl, plt, i, dirnx, out ti);
+                bool cgy = CanPolyIncludeNext(ref vpl, plt, i, dirny, out ti);
+                bool cgyp = CanPolyIncludeNext(ref vpl, plt, i, dirpy, out ti);
+
 
                 if (cgx && (slope >= 0)) //new slope should be >=0
                 {
