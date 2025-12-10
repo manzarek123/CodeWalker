@@ -181,6 +181,7 @@ namespace CodeWalker.Project.Panels
                                 vert.Normal = intres.Normal;
                                 vert.Material = intres.Material.Type;
                                 vert.PolyFlags = (ushort)intres.Material.Flags;
+                                vert.PedDensity = intres.Material.PedDensity;
                                 vert.PrevIDX = -1;
                                 vert.PrevIDY = -1;
                                 vert.NextIDX = -1;
@@ -311,6 +312,7 @@ namespace CodeWalker.Project.Panels
                         if (poly2.Merged) continue;//new merged poly will get checked later..
                         if (poly.Material.Index != poly2.Material.Index) continue;
                         if (poly.PolyFlags != poly2.PolyFlags) continue;
+                        if (poly.PedDensity != poly2.PedDensity) continue;
 
                         var poly2center = poly2.GetCenter();
 
@@ -782,6 +784,9 @@ namespace CodeWalker.Project.Panels
                     ypoly.B02_IsFootpath = (poly.Material.Index == 1);
                     ypoly.B06_SteepSlope = poly.IsTooSteep();
                     ypoly.B18_IsRoad = (poly.Material.Index == 4);//4,5,6
+                    ypoly.B22_FootpathUnk1 = (poly.PedDensity == 1);
+                    ypoly.B23_FootpathUnk2 = (poly.PedDensity == 2);
+                    ypoly.B24_FootpathMall = (poly.PedDensity == 3);
 
                     // Register all edges in the dictionary for neighbor lookup
                     for (int i = 0; i < poly.Vertices.Length; i++)
@@ -920,6 +925,7 @@ namespace CodeWalker.Project.Panels
             public Vector3 Normal;
             public BoundsMaterialType Material;
             public ushort PolyFlags;
+            public byte PedDensity;
 
             public int PrevIDX;
             public int PrevIDY;
@@ -987,6 +993,7 @@ namespace CodeWalker.Project.Panels
             public Vector3 Normal;
             public BoundsMaterialType Material;
             public ushort PolyFlags;
+            public byte PedDensity;
 
             public int[] CornerIndices;
             public Vector3[] Vertices;
@@ -1002,6 +1009,7 @@ namespace CodeWalker.Project.Panels
                 Normal = vert.Normal;
                 Material = vert.Material;
                 PolyFlags = vert.PolyFlags;
+                PedDensity = vert.PedDensity;
             }
             public GenPoly(Vector3[] verts, GenPoly orig)
             {
@@ -1009,6 +1017,7 @@ namespace CodeWalker.Project.Panels
                 Normal = orig.Normal;
                 Material = orig.Material;
                 PolyFlags = orig.PolyFlags;
+                PedDensity = orig.PedDensity;
             }
 
             public Vector3 GetCenter()
@@ -1865,6 +1874,7 @@ namespace CodeWalker.Project.Panels
 
                         }
                     }
+
                 }
 
 
