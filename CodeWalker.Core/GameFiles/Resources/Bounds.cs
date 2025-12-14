@@ -2716,29 +2716,59 @@ namespace CodeWalker.GameFiles
                 while (nodeind < lastind)
                 {
                     var node = BVH.Nodes.data_items[nodeind];
+
                     box.Minimum = node.Min * q + c;
                     box.Maximum = node.Max * q + c;
                     bool nodehit = sph.Intersects(ref box);
                     bool nodeskip = !nodehit;
-                    if (node.ItemCount <= 0) //intermediate node with child nodes
+
+                    // protect against malformed BVH where ItemId/ItemCount are negative (short overflow)
+                    int nodeItemId = node.ItemId;
+                    int nodeItemCount = node.ItemCount;
+
+                    if (nodeItemCount <= 0) // intermediate node with child nodes
                     {
-                        if (nodeskip)
+                        // If ItemId is invalid (<=0) just advance by 1 to avoid jumping backwards/overflow.
+                        int childCount = nodeItemId;
+                        if (childCount <= 0)
                         {
-                            nodeind += node.ItemId; //(child node count)
+                            nodeind++; // skip this node (invalid child count)
                         }
                         else
                         {
-                            nodeind++;
+                            if (nodeskip)
+                            {
+                                nodeind += childCount; //(child node count)
+                            }
+                            else
+                            {
+                                nodeind++;
+                            }
                         }
                     }
-                    else //leaf node, with polygons
+                    else // leaf node, with polygons
                     {
                         if (!nodeskip)
                         {
-                            var lastp = Math.Min(node.ItemId + node.ItemCount, (int)PolygonsCount);
+                            if (nodeItemId < 0)
+                            {
+                                // invalid start index, skip this node
+                                nodeind++;
+                                res.TestedNodeCount++;
+                                continue;
+                            }
+                            if (nodeItemCount < 0)
+                            {
+                                nodeind++;
+                                res.TestedNodeCount++;
+                                continue;
+                            }
 
-                            SphereIntersectPolygons(ref sph, ref res, node.ItemId, lastp);
-
+                            var lastp = Math.Min(nodeItemId + nodeItemCount, (int)PolygonsCount);
+                            if (nodeItemId < lastp) // validate range
+                            {
+                                SphereIntersectPolygons(ref sph, ref res, nodeItemId, lastp);
+                            }
                         }
                         nodeind++;
                     }
@@ -2785,29 +2815,58 @@ namespace CodeWalker.GameFiles
                 while (nodeind < lastind)
                 {
                     var node = BVH.Nodes.data_items[nodeind];
+
                     box.Minimum = node.Min * q + c;
                     box.Maximum = node.Max * q + c;
                     bool nodehit = ray.Intersects(ref box, out bvhboxhittest);
                     bool nodeskip = !nodehit || (bvhboxhittest > res.HitDist);
-                    if (node.ItemCount <= 0) //intermediate node with child nodes
+
+                    // protect against malformed BVH where ItemId/ItemCount are negative (short overflow)
+                    int nodeItemId = node.ItemId;
+                    int nodeItemCount = node.ItemCount;
+
+                    if (nodeItemCount <= 0) // intermediate node with child nodes
                     {
-                        if (nodeskip)
+                        int childCount = nodeItemId;
+                        if (childCount <= 0)
                         {
-                            nodeind += node.ItemId; //(child node count)
+                            nodeind++; // skip invalid node
                         }
                         else
                         {
-                            nodeind++;
+                            if (nodeskip)
+                            {
+                                nodeind += childCount; //(child node count)
+                            }
+                            else
+                            {
+                                nodeind++;
+                            }
                         }
                     }
-                    else //leaf node, with polygons
+                    else // leaf node, with polygons
                     {
                         if (!nodeskip)
                         {
-                            var lastp = Math.Min(node.ItemId + node.ItemCount, (int)PolygonsCount);
+                            if (nodeItemId < 0)
+                            {
+                                // invalid start index, skip this node
+                                nodeind++;
+                                res.TestedNodeCount++;
+                                continue;
+                            }
+                            if (nodeItemCount < 0)
+                            {
+                                nodeind++;
+                                res.TestedNodeCount++;
+                                continue;
+                            }
 
-                            RayIntersectPolygons(ref ray, ref res, node.ItemId, lastp);
-
+                            var lastp = Math.Min(nodeItemId + nodeItemCount, (int)PolygonsCount);
+                            if (nodeItemId < lastp) // validate range
+                            {
+                                RayIntersectPolygons(ref ray, ref res, nodeItemId, lastp);
+                            }
                         }
                         nodeind++;
                     }
