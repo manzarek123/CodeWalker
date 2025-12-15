@@ -164,6 +164,7 @@ namespace CodeWalker.Project.Panels
 
                 for (int vx = 0; vx < vertexCountX; vx++)
                 {
+                    UpdateStatus($"Processing {Math.Round((double)vx / vertexCountX * 100.0, 1)}%");
                     for (int vy = 0; vy < vertexCountY; vy++)
                     {
                         vgrid.BeginCell(vx, vy);
@@ -172,8 +173,23 @@ namespace CodeWalker.Project.Panels
                         ray.Position.Z = bmax.Z + 1.0f;//start the ray at the top of the cell
                         var intres = space.RayIntersect(ray, float.MaxValue, layers);
                         hitTestCount++;
-                        while (intres.Hit && (intres.HitDist > 0))
+
+                        while (intres.Hit)
                         {
+                            // Ignore leaves/tree bark material (index 52/54) and continue casting down.
+                            var matIndex = intres.Material.Type.Index;
+                            if ((matIndex == 52 || matIndex == 54) ||
+                            // Ignore no-navmesh polys polys
+                            ((ushort)intres.Material.Flags & (ushort)EBoundMaterialFlags.FLAG_NO_NAVMESH) != 0 ||
+                            // Ignore entity (dynamic object)
+                            intres.HitEntity != null)
+                            {
+                                // move just below this hit and continue searching
+                                ray.Position.Z = (intres.HitDist > 0.25f) ? intres.Position.Z - 0.25f : ray.Position.Z - 0.25f;
+                                intres = space.RayIntersect(ray, float.MaxValue, layers);
+                                continue;
+                            }
+
                             if (intres.HitDist > 0)
                             {
                                 hitCount++;
@@ -196,8 +212,8 @@ namespace CodeWalker.Project.Panels
                                 if (vgrid.CurVertexCount > 15) //too many hits?
                                 { break; }
                             }
-                            //continue down until no more hits..... step by 3m
-                            ray.Position.Z = intres.Position.Z - 3.0f;
+                            // continue down until no more hits..... step by 0.5m
+                            ray.Position.Z = (intres.HitDist > 0.5f) ? intres.Position.Z - 0.5f : ray.Position.Z - 0.5f;
                             intres = space.RayIntersect(ray, float.MaxValue, layers);
                         }
                         vgrid.EndCell(vx, vy);
